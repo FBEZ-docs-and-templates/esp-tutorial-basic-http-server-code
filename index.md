@@ -1,4 +1,4 @@
-# HTTP Server tutorial
+# HTTP Server Tutorial
 
 ## Introdution
 
@@ -55,7 +55,53 @@ At this point, you can run the command `ESP-IDF: Build, Flash and start a Monito
 
 If everything runs smoothly, you should see the compilation finish succesfully, the flashing of the firmware and the `hello_world` example running, saying `Hello world!` and restarting after 10 seconds. 
 
+Now change the content of `hello_world_main.c` to the following code
+
+```C
+#include <stdio.h>
+#include <inttypes.h>
+#include "sdkconfig.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include <string.h>
+// #include "esp_wifi.h"
+
+
+void app_main(void)
+{
+    printf("Hello tutorial!\n");
+
+}
+```
+
+Build, flash and monitor again to be sure that everything is working. 
+
+Before moving on, it's best to change the file name. To do so, rename the file `hello_world_main.c` to `basic_http_server.c`. Then we have to inform CMake that it needs to compile this file instead of `hello_world_main.c`. Open `main/CMakeLists.txt` and change the content to
+```
+idf_component_register(SRCS "basic_http_server.c"
+                    PRIV_REQUIRES spi_flash
+                    INCLUDE_DIRS "")
+```
+
+Perform a full clean (`ESP-IDF: Full Clean Project`) and build, flash and open a monitor again. 
+
 
 ## ESP32* as AP
 
+
+### TO-CHECK - NVS
+
+First we inizialize the nvs flash. To do so we need to include "nvs_flash.h". To tell the compiler where to find it, we should add it as PRIV_REQUIRES in the CMakeLists.txt:
+```
+PRIV_REQUIRES nvs_flash
+```
+
+Remember to perform a full-clean every time you change the CMakeLists.txt file. 
+
+### LOGS
+
+To make it easier to test all the parts of the code, it's better to make use of the logging utilities given by the `esp_log.h` header. To do so, you need to include it at the beginning of the file. 
+You can create a tag string, used for logging purposes with `static const char *TAG = "Basic HTTP Server";` and call the logginf functions as `ESP_LOGI(TAG, "ESP Tutorial");`.
+You can find an in-depth explaination of all the loggin function [here](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/system/log.html).
+In this tutorial only `ESP_LOGI` will be used. 
 

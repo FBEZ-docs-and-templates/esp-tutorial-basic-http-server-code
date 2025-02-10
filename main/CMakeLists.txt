@@ -1,3 +1,3 @@
-idf_component_register(SRCS "hello_world_main.c"
-                    PRIV_REQUIRES spi_flash
-                    INCLUDE_DIRS "")
+idf_component_register(SRCS "basic_http_server.c"
+                    PRIV_REQUIRES nvs_flash
+                    INCLUDE_DIRS ".")
