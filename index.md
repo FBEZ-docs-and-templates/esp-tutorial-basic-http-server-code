@@ -1,5 +1,5 @@
 # HTTP Server Tutorial
-
+<div style="text-align:justify">
 ## Introdution
 
 In this tutorial you will create a simple http server as a mean for provisioning. The esp32* module will start as an access point (AP) and serve a simple http page which lets the user to connecto to it, browse to a specific page and enter the SSID and password of the router. 
@@ -89,7 +89,7 @@ Perform a full clean (`ESP-IDF: Full Clean Project`) and build, flash and open a
 ## ESP32* as AP
 
 
-### TO-CHECK - NVS
+### (TO-CHECK - NVS)
 
 First we inizialize the nvs flash. To do so we need to include "nvs_flash.h". To tell the compiler where to find it, we should add it as PRIV_REQUIRES in the CMakeLists.txt:
 ```
@@ -100,8 +100,89 @@ Remember to perform a full-clean every time you change the CMakeLists.txt file.
 
 ### LOGS
 
+
 To make it easier to test all the parts of the code, it's better to make use of the logging utilities given by the `esp_log.h` header. To do so, you need to include it at the beginning of the file. 
 You can create a tag string, used for logging purposes with `static const char *TAG = "Basic HTTP Server";` and call the logginf functions as `ESP_LOGI(TAG, "ESP Tutorial");`.
 You can find an in-depth explaination of all the loggin function [here](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/system/log.html).
 In this tutorial only `ESP_LOGI` will be used. 
 
+
+### Start IP Stack
+
+Espressif IP stack is managed through an unified interface called [`esp_netif`](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/network/esp_netif.html#esp-netif). This interface was implemented to have an agnostic interface for every ip stack. For the time being the only TCP/IP stack available through this interface is lwIP. 
+
+For the majority of application, it is enough to create a default network with the default event loop, and that is done in this tutorial. 
+
+Now create a new function `wifi_init_softap` to keep things clean and to have a way to easily start a new task. 
+
+What you need to do is
+1. Initialize the `esp_netif` (`esp_netif_init`)
+2. Initialize the standard event loop (`esp_event_loop_create_default`)
+3. Initialize and register all handler for a soft ap application
+4. Configure and start the wifi ap 
+
+For a complete implementation with error handling you can refer [here](https://github.com/espressif/esp-idf/blob/master/examples/wifi/getting_started/softAP/main/softap_example_main.c#L47).
+
+In the code the configuration is accessed through constants, so you need first to define all the required values for the inizialization (SSID, password, WiFi Channel and Maximum number of connections)
+
+```c
+
+```
+
+Espressif's Wifi component makes use of [event loops](https://en.wikipedia.org/wiki/Event_loop). So you need to start the [default event loop](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/esp_event.html#default-event-loop) and create and register a function to handle the events. For now, this function will only print the `event_id`.
+
+```c
+void wifi_init_softap()
+{
+    esp_netif_init();
+    esp_event_loop_create_default();
+    esp_netif_create_default_wifi_ap();
+
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT(); // always start with this
+
+    esp_wifi_init(&cfg);
+
+    esp_event_handler_instance_register(WIFI_EVENT,
+                                                        ESP_EVENT_ANY_ID,
+                                                        &wifi_event_handler,
+                                                        NULL,
+                                                        NULL);
+
+    wifi_config_t wifi_config = {
+        .ap = {
+            .ssid = ESP_WIFI_SSID,
+            .ssid_len = strlen(ESP_WIFI_SSID),
+            .channel = ESP_WIFI_CHANNEL,
+            .password = ESP_WIFI_PASS,
+            .max_connection = MAX_STA_CONN,
+            .authmode = WIFI_AUTH_WPA2_PSK,
+            .pmf_cfg = {
+                .required = true,
+            },
+        },
+    };
+
+
+    esp_wifi_set_mode(WIFI_MODE_AP);
+    esp_wifi_set_config(WIFI_IF_AP, &wifi_config);
+    esp_wifi_start();
+
+    ESP_LOGI(TAG, "wifi_init_softap finished. SSID:%s password:%s channel:%d",
+             ESP_WIFI_SSID, ESP_WIFI_PASS, ESP_WIFI_CHANNEL);
+}
+```
+
+The function handling the events is for now simply
+
+```c
+static void wifi_event_handler(void* arg, esp_event_base_t event_base,
+                                  int32_t event_id, void* event_data){
+    printf("Event nr: %ld!\n", event_id);
+}
+```
+
+Now compile, flash, start a monitor and run and you should start seeing a few event number appearing on the terminal.
+
+You can take your smartphone and 
+
+</div>
