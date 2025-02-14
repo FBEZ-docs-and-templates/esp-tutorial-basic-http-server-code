@@ -3,5 +3,8 @@
         "board/esp32c3-builtin.cfg"
     ],
     "idf.flashType": "UART",
-    "idf.port": "/dev/tty.usbserial-11130"
+    "idf.port": "/dev/tty.usbserial-11130",
+    "files.associations": {
+        "inttypes.h": "c"
+    }
 }
